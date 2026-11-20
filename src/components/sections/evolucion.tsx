@@ -330,7 +330,7 @@ function ComparisonRows({
             </TableCell>
             <TableCell className="text-sm">
               {pct !== null ? (
-                <span className={pct < 0 ? "text-emerald-600" : pct > 0 ? "text-rose-600" : ""}>
+                <span className={pct < 0 ? "text-cedersa-blue" : pct > 0 ? "text-cedersa-red" : ""}>
                   {pct > 0 ? "+" : ""}
                   {pct.toFixed(1)}%
                 </span>
@@ -348,7 +348,7 @@ function ComparisonRows({
 function DeltaBadge({ delta, digits }: { delta: number | null; digits: number }) {
   if (delta === null) return <span className="text-muted-foreground">—</span>;
   const Icon = delta < 0 ? ArrowDown : delta > 0 ? ArrowUp : Minus;
-  const color = delta < 0 ? "text-emerald-600" : delta > 0 ? "text-rose-600" : "text-muted-foreground";
+  const color = delta < 0 ? "text-cedersa-blue" : delta > 0 ? "text-cedersa-red" : "text-muted-foreground";
   return (
     <span className={`inline-flex items-center gap-1 text-sm font-medium ${color}`}>
       <Icon className="w-3.5 h-3.5" />

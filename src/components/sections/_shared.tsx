@@ -6,18 +6,18 @@ import { Circle } from "lucide-react";
 export function QualityBadge({ score, className }: { score: string; className?: string }) {
   const map: Record<string, { color: string; label: string; ring: string }> = {
     VERDE: {
-      color: "text-emerald-600 dark:text-emerald-400",
-      ring: "bg-emerald-500/10 border-emerald-500/30",
+      color: "text-cedersa-blue dark:text-cedersa-blue",
+      ring: "bg-blue-500/10 border-blue-500/30",
       label: "Condiciones adecuadas",
     },
     AMARILLO: {
-      color: "text-amber-600 dark:text-amber-400",
-      ring: "bg-amber-500/10 border-amber-500/30",
+      color: "text-cedersa-orange dark:text-cedersa-orange",
+      ring: "bg-orange-500/10 border-orange-500/30",
       label: "Precaución",
     },
     ROJO: {
-      color: "text-rose-600 dark:text-rose-400",
-      ring: "bg-rose-500/10 border-rose-500/30",
+      color: "text-cedersa-red dark:text-cedersa-red",
+      ring: "bg-red-500/10 border-red-500/30",
       label: "Condiciones potencialmente inadecuadas",
     },
   };
@@ -41,7 +41,7 @@ export function InBodyBadge({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30",
+        "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-500/10 text-cedersa-orange border border-orange-500/30",
         className
       )}
     >
@@ -54,7 +54,7 @@ export function CalculatedBadge({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30",
+        "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-500/10 text-cedersa-red border border-red-500/30",
         className
       )}
     >

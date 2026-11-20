@@ -326,7 +326,7 @@ export function NuevaEvaluacionSection() {
                 i === step
                   ? "bg-primary text-primary-foreground border-primary"
                   : i < step
-                  ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/30 cursor-pointer"
+                  ? "bg-blue-500/10 text-cedersa-blue border-blue-500/30 cursor-pointer"
                   : "text-muted-foreground border-border"
               }`}
               disabled={i > step}
@@ -563,7 +563,7 @@ export function NuevaEvaluacionSection() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Resultado InBody */}
-            <Card className="border-t-4 border-t-amber-500">
+            <Card className="border-t-4 border-t-[var(--cedersa-orange)]">
               <CardHeader>
                 <CardTitle className="text-base flex items-center justify-between">
                   <span>Resultado InBody</span>
@@ -579,14 +579,14 @@ export function NuevaEvaluacionSection() {
                 <Row label="Agua corporal total" value={fmt(bia.inbodyTBW ? Number(bia.inbodyTBW) : null, 1, " kg")} />
                 <Row label="Agua extracelular" value={fmt(bia.inbodyECW ? Number(bia.inbodyECW) : null, 1, " kg")} />
                 <Row label="Agua intracelular" value={fmt(bia.inbodyICW ? Number(bia.inbodyICW) : null, 1, " kg")} />
-                <p className="text-[11px] text-amber-700 dark:text-amber-300 pt-2">
+                <p className="text-[11px] text-cedersa-orange pt-2">
                   Resultado proporcionado por el dispositivo InBody.
                 </p>
               </CardContent>
             </Card>
 
             {/* Estimación científica */}
-            <Card className="border-t-4 border-t-emerald-500">
+            <Card className="border-t-4 border-t-[var(--cedersa-red)]">
               <CardHeader>
                 <CardTitle className="text-base flex items-center justify-between">
                   <span>Estimación científica</span>
@@ -680,7 +680,7 @@ export function NuevaEvaluacionSection() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Check className="w-5 h-5 text-emerald-600" /> Evaluación registrada
+              <Check className="w-5 h-5 text-cedersa-blue" /> Evaluación registrada
             </CardTitle>
             <CardDescription>
               La medición quedó almacenada con su trazabilidad completa.

@@ -114,8 +114,8 @@ export function InvestigacionSection() {
         </p>
       </div>
 
-      <Alert className="border-emerald-500/30 bg-emerald-500/5">
-        <ShieldCheck className="w-4 h-4 text-emerald-600" />
+      <Alert className="border-blue-500/30 bg-blue-500/5">
+        <ShieldCheck className="w-4 h-4 text-cedersa-blue" />
         <AlertDescription className="text-sm">
           No incluye nombres ni identificadores personales. Cada participante se identifica
           únicamente mediante un hash no reversible. La exportación respeta el consentimiento

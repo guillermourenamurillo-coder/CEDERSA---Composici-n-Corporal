@@ -14,7 +14,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Activity, Loader2, ShieldCheck } from "lucide-react";
+import { Loader2, ShieldCheck } from "lucide-react";
+import Image from "next/image";
 
 export function LoginScreen() {
   const router = useRouter();
@@ -41,20 +42,30 @@ export function LoginScreen() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-teal-50 via-background to-emerald-50 dark:from-slate-900 dark:via-background dark:to-slate-900 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-background to-orange-50 dark:from-slate-900 dark:via-background dark:to-slate-900 p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary text-primary-foreground shadow-lg mb-3">
-            <Activity className="w-7 h-7" />
+          <div className="inline-flex items-center justify-center mb-3">
+            <Image
+              src="/cedersa-logo.jpg"
+              alt="Logo CEDERSA"
+              width={96}
+              height={96}
+              className="rounded-2xl shadow-md bg-white p-1.5"
+              priority
+            />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
             CEDERSA
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs font-medium text-cedersa-blue">
+            Centro de Acondicionamiento Físico
+          </p>
+          <p className="text-sm text-muted-foreground mt-0.5">
             Composición Corporal · Universidad Nacional · CIEMHCAVI
           </p>
         </div>
-        <Card className="shadow-xl border-border/60">
+        <Card className="shadow-xl border-border/60 border-t-4 border-t-[var(--cedersa-blue)]">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-primary" />

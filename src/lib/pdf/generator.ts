@@ -46,16 +46,23 @@ export function generateMeasurementPdf(measurement: MeasurementWithRelations): B
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 40;
 
-  // Encabezado
+  // Encabezado institucional CEDERSA
   doc.setFontSize(10);
   doc.setTextColor(100);
   doc.text("Universidad Nacional · CIEMHCAVI · CEDERSA", margin, 32);
   doc.setFontSize(16);
-  doc.setTextColor(15, 118, 110); // teal-700
+  doc.setTextColor(30, 58, 95); // azul oscuro institucional
   doc.text("Evaluación de Composición Corporal", margin, 54);
-  doc.setDrawColor(15, 118, 110);
-  doc.setLineWidth(1.5);
-  doc.line(margin, 62, pageWidth - margin, 62);
+  // Franja tricolor del logo: rojo | azul | naranja
+  const stripeY = 60;
+  const stripeH = 3;
+  const stripeW = (pageWidth - margin * 2) / 3;
+  doc.setFillColor(200, 16, 46);   // rojo CEDERSA
+  doc.rect(margin, stripeY, stripeW, stripeH, "F");
+  doc.setFillColor(30, 58, 95);    // azul oscuro
+  doc.rect(margin + stripeW, stripeY, stripeW, stripeH, "F");
+  doc.setFillColor(224, 123, 0);   // naranja CEDERSA
+  doc.rect(margin + stripeW * 2, stripeY, stripeW, stripeH, "F");
 
   let y = 80;
 
@@ -80,7 +87,7 @@ export function generateMeasurementPdf(measurement: MeasurementWithRelations): B
       ["Evaluador", measurement.evaluator.name],
     ],
     theme: "striped",
-    headStyles: { fillColor: [15, 118, 110], textColor: 255, fontSize: 9 },
+    headStyles: { fillColor: [30, 58, 95], textColor: 255, fontSize: 9 },
     bodyStyles: { fontSize: 9 },
     margin: { left: margin, right: margin },
   });
@@ -101,7 +108,7 @@ export function generateMeasurementPdf(measurement: MeasurementWithRelations): B
       ["Origen de datos", measurement.dataOrigin],
     ],
     theme: "striped",
-    headStyles: { fillColor: [15, 118, 110], textColor: 255, fontSize: 9 },
+    headStyles: { fillColor: [30, 58, 95], textColor: 255, fontSize: 9 },
     bodyStyles: { fontSize: 9 },
     margin: { left: margin, right: margin },
   });
@@ -128,7 +135,7 @@ export function generateMeasurementPdf(measurement: MeasurementWithRelations): B
       ["Calidad", qualityLabel(measurement.qualityScore)],
     ],
     theme: "striped",
-    headStyles: { fillColor: [15, 118, 110], textColor: 255, fontSize: 9 },
+    headStyles: { fillColor: [30, 58, 95], textColor: 255, fontSize: 9 },
     bodyStyles: { fontSize: 9 },
     margin: { left: margin, right: margin },
   });
@@ -152,7 +159,7 @@ export function generateMeasurementPdf(measurement: MeasurementWithRelations): B
       ["Agua intracelular (kg)", fmt(measurement.inbodyICW)],
     ],
     theme: "striped",
-    headStyles: { fillColor: [217, 119, 6], textColor: 255, fontSize: 9 }, // amber-600
+    headStyles: { fillColor: [224, 123, 0], textColor: 255, fontSize: 9 }, // naranja CEDERSA (InBody)
     bodyStyles: { fontSize: 9 },
     margin: { left: margin, right: margin },
   });
@@ -186,7 +193,7 @@ export function generateMeasurementPdf(measurement: MeasurementWithRelations): B
       ["Agua corporal total (kg)", fmt(measurement.calcTBW)],
     ],
     theme: "striped",
-    headStyles: { fillColor: [5, 150, 105], textColor: 255, fontSize: 9 }, // emerald-600
+    headStyles: { fillColor: [200, 16, 46], textColor: 255, fontSize: 9 }, // rojo CEDERSA (científico)
     bodyStyles: { fontSize: 9 },
     margin: { left: margin, right: margin },
   });

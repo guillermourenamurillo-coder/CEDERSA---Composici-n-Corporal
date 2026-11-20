@@ -15,7 +15,6 @@ import {
   Settings,
   LogOut,
   Menu,
-  Activity,
   Sun,
   Moon,
   X,
@@ -35,6 +34,7 @@ import {
   type Section,
 } from "@/stores/app-store";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 import { DashboardSection } from "@/components/sections/dashboard";
 import { ParticipantesSection } from "@/components/sections/participantes";
 import { NuevaEvaluacionSection } from "@/components/sections/nueva-evaluacion";
@@ -120,6 +120,8 @@ export function AppShell() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      {/* Franja institucional CEDERSA con los 3 colores del logo */}
+      <div className="cedersa-stripe h-1 w-full" aria-hidden />
       <header className="sticky top-0 z-30 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center gap-3 px-4 sm:px-6">
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
@@ -130,11 +132,15 @@ export function AppShell() {
           <SheetContent side="left" className="w-72 p-0">
             <SheetHeader className="px-4 py-4 border-b">
               <SheetTitle className="flex items-center gap-2 text-left">
-                <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
-                  <Activity className="w-4 h-4" />
-                </div>
+                <Image
+                  src="/cedersa-logo.jpg"
+                  alt="Logo CEDERSA"
+                  width={40}
+                  height={40}
+                  className="rounded-md bg-white p-0.5"
+                />
                 <div>
-                  <div className="text-sm font-bold">CEDERSA</div>
+                  <div className="text-sm font-bold" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>CEDERSA</div>
                   <div className="text-[11px] text-muted-foreground font-normal">Composición Corporal</div>
                 </div>
               </SheetTitle>
@@ -144,15 +150,26 @@ export function AppShell() {
         </Sheet>
 
         <div className="flex items-center gap-2 md:hidden">
-          <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
-            <Activity className="w-4 h-4" />
-          </div>
-          <div className="text-sm font-bold">CEDERSA</div>
+          <Image
+            src="/cedersa-logo.jpg"
+            alt="Logo CEDERSA"
+            width={32}
+            height={32}
+            className="rounded-md bg-white p-0.5"
+          />
+          <div className="text-sm font-bold" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>CEDERSA</div>
         </div>
 
         <div className="hidden md:flex items-center gap-2">
-          <h1 className="text-base font-semibold tracking-tight">
-            CEDERSA <span className="text-muted-foreground font-normal">| Composición Corporal</span>
+          <Image
+            src="/cedersa-logo.jpg"
+            alt="Logo CEDERSA"
+            width={32}
+            height={32}
+            className="rounded-md bg-white p-0.5"
+          />
+          <h1 className="text-base font-semibold tracking-tight" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
+            CEDERSA <span className="text-muted-foreground font-normal" style={{ fontFamily: 'var(--font-geist-sans), sans-serif' }}>| Composición Corporal</span>
           </h1>
         </div>
 
@@ -186,11 +203,15 @@ export function AppShell() {
         <aside className="hidden md:flex w-60 flex-col border-r bg-sidebar sticky top-16 h-[calc(100vh-4rem)]">
           <div className="px-4 py-4 border-b">
             <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
-                <Activity className="w-4 h-4" />
-              </div>
+              <Image
+                src="/cedersa-logo.jpg"
+                alt="Logo CEDERSA"
+                width={36}
+                height={36}
+                className="rounded-md bg-white p-0.5"
+              />
               <div>
-                <div className="text-sm font-bold">CEDERSA</div>
+                <div className="text-sm font-bold" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>CEDERSA</div>
                 <div className="text-[11px] text-muted-foreground">Composición Corporal</div>
               </div>
             </div>
@@ -217,6 +238,7 @@ export function AppShell() {
       </div>
 
       <footer className="mt-auto border-t bg-background py-3 px-4 sm:px-6 text-[11px] text-muted-foreground text-center leading-relaxed">
+        <div className="cedersa-stripe h-0.5 w-full mb-2 max-w-md mx-auto" aria-hidden />
         CEDERSA | Universidad Nacional · CIEMHCAVI · La bioimpedancia no constituye por sí sola un diagnóstico médico.
       </footer>
     </div>

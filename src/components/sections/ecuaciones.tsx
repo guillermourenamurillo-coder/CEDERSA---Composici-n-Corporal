@@ -175,11 +175,11 @@ export function EcuacionesSection() {
                       <TableCell className="text-sm">{e.outputVariable}</TableCell>
                       <TableCell>
                         {e.validationStatus === "VALIDADO" ? (
-                          <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-[11px]">
+                          <Badge className="bg-blue-500/10 text-cedersa-blue border-blue-500/30 text-[11px]">
                             <CheckCircle2 className="w-3 h-3 mr-1" /> Validado
                           </Badge>
                         ) : e.validationStatus === "PROVISIONAL" ? (
-                          <Badge className="bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30 text-[11px]">
+                          <Badge className="bg-orange-500/10 text-cedersa-orange border-orange-500/30 text-[11px]">
                             <AlertTriangle className="w-3 h-3 mr-1" /> Provisional
                           </Badge>
                         ) : (

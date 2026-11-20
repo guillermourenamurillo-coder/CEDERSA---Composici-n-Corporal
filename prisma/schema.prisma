@@ -1,0 +1,231 @@
+// Prisma schema — CEDERSA | Composición Corporal
+// Diseñado de forma portable (SQLite en sandbox; migrable a PostgreSQL
+// cambiando únicamente el bloque `datasource`).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// === USUARIOS Y AUTENTICACIÓN ===
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         UserRole @default(EVALUADOR)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  measurements Measurement[]
+  auditLogs    AuditLog[]
+}
+
+enum UserRole {
+  ADMIN
+  EVALUADOR
+  INVESTIGADOR
+  USUARIO
+}
+
+// === PARTICIPANTES ===
+model Participant {
+  id                 String   @id @default(cuid())
+  internalId         String   @unique
+  fullName           String
+  identification     String?
+  sex                Sex
+  birthDate          DateTime
+  heightCm           Float
+  physicalActivity   String? // sedentario, ligero, moderado, activo, muy activo
+  populationCategory String? // atleta, poblacion_general, adulto_mayor, otro
+  isAthlete          Boolean  @default(false)
+  sport              String?
+  observations       String?
+  consentDataUse     Boolean  @default(false)
+  linkedUserId       String? // si el participante es también un usuario (autogestión)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  measurements       Measurement[]
+}
+
+enum Sex {
+  MASCULINO
+  FEMENINO
+}
+
+// === DISPOSITIVOS ===
+model Device {
+  id              String   @id @default(cuid())
+  manufacturer    String   // p. ej. InBody
+  model           String   // p. ej. InBody 770
+  serialNumber    String?
+  biaType         String   // SFBIA, MFBIA, BIS
+  electrodesCount Int?
+  frequenciesKHz  String?  // separados por coma: "1,5,50,250,500"
+  softwareName    String?
+  softwareVersion String?
+  calibrationDate DateTime?
+  createdAt       DateTime @default(now())
+  measurements    Measurement[]
+}
+
+// === BIBLIOTECA DE ECUACIONES ===
+model Equation {
+  id                String   @id @default(cuid())
+  name              String
+  authors           String
+  year              Int
+  reference         String
+  doi               String?
+  population        String
+  ageRangeMin       Int?
+  ageRangeMax       Int?
+  sex               String // MASCULINO, FEMENINO, AMBOS
+  deviceType        String?
+  frequencyKHz      Float?
+  variablesRequired String // separados por coma: "height,weight,R"
+  formula           String
+  unitsRequired     String // p. ej. "height=cm,weight=kg,R=ohm"
+  see               Float? // error estándar de estimación
+  r2                Float?
+  limitations       String?
+  validationStatus  String   @default("VALIDADO") // VALIDADO, PROVISIONAL, EXPERIMENTAL
+  outputVariable    String // TBW, FFM, etc.
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  measurements      Measurement[]
+}
+
+// === MEDICIONES ===
+model Measurement {
+  id                String   @id @default(cuid())
+  participantId     String
+  participant       Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  deviceId          String
+  device            Device     @relation(fields: [deviceId], references: [id])
+  evaluatorId       String
+  evaluator         User       @relation(fields: [evaluatorId], references: [id])
+  measuredAt        DateTime   @default(now())
+  // eléctricos básicos
+  weightKg          Float?
+  heightCm          Float?
+  resistanceR       Float? // ohmios
+  reactanceXc       Float? // ohmios
+  impedanceZ        Float? // ohmios
+  phaseAngleDeg     Float? // grados
+  frequencyKHz      Float?
+  // segmentaria (ohmios)
+  segRArmR          Float?
+  segLArmR          Float?
+  segTrunkR         Float?
+  segRLegR          Float?
+  segLLegR          Float?
+  segRArmXc         Float?
+  segLArmXc         Float?
+  segTrunkXc        Float?
+  segRLegXc         Float?
+  segLLegXc         Float?
+  // multifrecuencia almacenada como JSON: {"1": {"R":..,"Xc":..}, "50": {...}}
+  multiFreqData     String?
+  // Datos propietarios InBody (paso directo, sin reinterpretar)
+  inbodyMuscleMass  Float? // kg
+  inbodyFatMass     Float? // kg
+  inbodyFatPercent  Float?
+  inbodyVisceralFat Float?
+  inbodyTBW         Float?
+  inbodyECW         Float?
+  inbodyICW         Float?
+  inbodySegmentalLean String? // JSON
+  inbodyRawJson     String? // registro original completo para trazabilidad
+  dataOrigin        String   @default("MANUAL") // MANUAL, CSV, XLSX, API
+  // ecuación utilizada para la estimación científica
+  equationId        String?
+  equation          Equation? @relation(fields: [equationId], references: [id])
+  // estimaciones científicas calculadas (transparentes)
+  calcResistanceIndex Float? // H²/R
+  calcTBW           Float?
+  calcFFM           Float?
+  calcFM            Float?
+  calcFatPercent    Float?
+  calcFFMI          Float?
+  calcFMI           Float?
+  calcSMI           Float?
+  calcPhaseAngle    Float?
+  // calidad
+  qualityScore      String   @default("AMARILLO") // VERDE, AMARILLO, ROJO
+  qualityNotes      String?
+  // trazabilidad
+  version           Int      @default(1)
+  parentVersionId   String? // cadena de correcciones
+  superseded        Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  conditions        MeasurementCondition?
+  bodyComposition   BodyComposition?
+  reports           Report[]
+  auditLogs         AuditLog[]
+}
+
+model MeasurementCondition {
+  id               String   @id @default(cuid())
+  measurementId    String   @unique
+  measurement      Measurement @relation(fields: [measurementId], references: [id], onDelete: Cascade)
+  hydrated         Boolean?
+  recentExercise   Boolean?
+  recentFood       Boolean?
+  recentAlcohol    Boolean?
+  voidedBladder    Boolean?
+  edema            Boolean?
+  similarToPrior   Boolean?
+  removedMetal     Boolean?
+  followedProtocol Boolean?
+  correctPosture   Boolean?
+  notes            String?
+  createdAt        DateTime @default(now())
+}
+
+model BodyComposition {
+  id                 String   @id @default(cuid())
+  measurementId     String   @unique
+  measurement       Measurement @relation(fields: [measurementId], references: [id], onDelete: Cascade)
+  tbw               Float?
+  ecw               Float?
+  icw               Float?
+  ecwTbwRatio       Float?
+  ffm               Float?
+  fm                Float?
+  fatPercent        Float?
+  skeletalMuscleMass Float?
+  bodyCellMass      Float?
+  segmentalLeanJson String? // {"rightArm":..,"leftArm":..,"trunk":..,"rightLeg":..,"leftLeg":..}
+  segmentalFatJson  String?
+  createdAt         DateTime @default(now())
+}
+
+model Report {
+  id            String   @id @default(cuid())
+  measurementId String
+  measurement   Measurement @relation(fields: [measurementId], references: [id], onDelete: Cascade)
+  generatedBy   String
+  pdfPath       String?
+  includesCharts Boolean @default(true)
+  includesComparison Boolean @default(true)
+  createdAt     DateTime @default(now())
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  measurementId String?
+  measurement   Measurement? @relation(fields: [measurementId], references: [id])
+  action        String // CREATE, UPDATE, DELETE, EXPORT, LOGIN
+  details       String?
+  createdAt     DateTime @default(now())
+}

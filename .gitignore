@@ -32,6 +32,18 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# CEDERSA: archivos locales no versionables
+/upload/
+/tool-results/
+/download/
+/db/*.db
+/db/*.db-journal
+/public/reports/
+/.zscripts/
+/mini-services/
+# No ignorar /scripts/ — contiene seed.ts que SÍ es código fuente
 
 # vercel
 .vercel

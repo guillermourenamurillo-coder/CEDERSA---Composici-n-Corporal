@@ -21,7 +21,15 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   if (body.name) data.name = body.name;
   if (body.role) data.role = body.role;
   if (body.active !== undefined) data.active = !!body.active;
-  if (body.password) data.passwordHash = await bcrypt.hash(body.password, 10);
+  if (body.password) {
+    if (typeof body.password !== "string" || body.password.length < 8) {
+      return Response.json(
+        { error: "La contraseña debe tener al menos 8 caracteres." },
+        { status: 400 }
+      );
+    }
+    data.passwordHash = await bcrypt.hash(body.password, 10);
+  }
   if (body.email && body.email !== existing.email) {
     const clash = await db.user.findUnique({ where: { email: body.email.toLowerCase().trim() } });
     if (clash) return Response.json({ error: "Correo en uso" }, { status: 409 });

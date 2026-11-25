@@ -45,6 +45,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { PasswordInput } from "@/components/ui/password-input";
 import { toast } from "sonner";
 import { Settings, Users, ScrollText, Plus, Pencil, Trash2 } from "lucide-react";
 import { fmtDate } from "./_shared";
@@ -203,7 +204,14 @@ function UsersTab() {
                   <Label htmlFor="password">
                     Contraseña {editing && <span className="text-xs text-muted-foreground">(dejar vacío para no cambiar)</span>}
                   </Label>
-                  <Input id="password" name="password" type="password" required={!editing} />
+                  <PasswordInput
+                    id="password"
+                    name="password"
+                    required={!editing}
+                    autoComplete={editing ? "new-password" : "new-password"}
+                    showStrength={!editing}
+                    placeholder={editing ? "•••••••• (dejar vacío para mantener)" : "Mínimo 8 caracteres"}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="role">Rol</Label>

@@ -36,6 +36,15 @@ export async function POST(req: NextRequest) {
   if (!body.email || !body.password || !body.name || !body.role) {
     return Response.json({ error: "email, password, name y role son requeridos" }, { status: 400 });
   }
+  if (typeof body.password !== "string" || body.password.length < 8) {
+    return Response.json(
+      { error: "La contraseña debe tener al menos 8 caracteres." },
+      { status: 400 }
+    );
+  }
+  if (!["ADMIN", "EVALUADOR", "INVESTIGADOR", "USUARIO"].includes(body.role)) {
+    return Response.json({ error: "Rol no válido" }, { status: 400 });
+  }
   const existing = await db.user.findUnique({ where: { email: body.email.toLowerCase().trim() } });
   if (existing) {
     return Response.json({ error: "Ya existe un usuario con ese correo" }, { status: 409 });

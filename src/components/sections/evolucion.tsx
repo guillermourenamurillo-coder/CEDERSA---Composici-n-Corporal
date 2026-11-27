@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
+import { useApiQuery } from "@/hooks/use-api-query";
 import {
   Card,
   CardContent,
@@ -38,6 +40,7 @@ import {
 } from "recharts";
 import { TrendingUp, ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { useAppStore } from "@/stores/app-store";
+import { AccessRestricted } from "@/components/access-restricted";
 import { fmt, fmtDate, QualityBadge } from "./_shared";
 
 interface Participant {
@@ -83,15 +86,27 @@ const RANGES = [
 ];
 
 export function EvolucionSection() {
+  const { data: session } = useSession();
+  const role = (session?.user as any)?.role as string | undefined;
+
+  // Evolución está disponible para ADMIN, EVALUADOR, INVESTIGADOR.
+  // USUARIO solo puede ver sus propios resultados (manejo futuro); por ahora
+  // mostramos acceso restringido para evitar crashes por 403 en endpoints.
+  if (role && !["ADMIN", "EVALUADOR", "INVESTIGADOR"].includes(role)) {
+    return <AccessRestricted required={["ADMIN", "EVALUADOR", "INVESTIGADOR"]} />;
+  }
+
+  return <EvolucionInner />;
+}
+
+function EvolucionInner() {
   const { selectedParticipantId, selectParticipant } = useAppStore();
   const [range, setRange] = useState("all");
 
-  const { data: participants } = useQuery<Participant[]>({
-    queryKey: ["participants"],
-    queryFn: async () => (await fetch("/api/participants")).json(),
-  });
+  const { data: participants } = useApiQuery<Participant[]>("/api/participants");
+  const participantsArr = Array.isArray(participants) ? participants : [];
 
-  const participant = participants?.find((p) => p.id === selectedParticipantId) || null;
+  const participant = participantsArr.find((p) => p.id === selectedParticipantId) || null;
 
   const { data: fullParticipant } = useQuery<{
     measurements: Measurement[];
@@ -151,7 +166,7 @@ export function EvolucionSection() {
           >
             <SelectTrigger><SelectValue placeholder="Seleccione un participante" /></SelectTrigger>
             <SelectContent>
-              {(participants || []).map((p) => (
+              {participantsArr.map((p) => (
                 <SelectItem key={p.id} value={p.id}>
                   {p.fullName} ({p.internalId})
                 </SelectItem>

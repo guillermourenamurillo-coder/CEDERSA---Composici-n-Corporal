@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
+import { useApiQuery } from "@/hooks/use-api-query";
 import {
   Card,
   CardContent,
@@ -37,6 +38,7 @@ import {
   FileDown,
 } from "lucide-react";
 import { useAppStore } from "@/stores/app-store";
+import { AccessRestricted } from "@/components/access-restricted";
 import { QualityBadge, InBodyBadge, CalculatedBadge, fmt } from "./_shared";
 
 interface Participant {
@@ -101,6 +103,18 @@ const CHECKLIST_FIELDS = [
 ] as const;
 
 export function NuevaEvaluacionSection() {
+  const { data: session } = useSession();
+  const role = (session?.user as any)?.role as string | undefined;
+
+  // Guardia de rol: solo ADMIN, EVALUADOR e INVESTIGADOR pueden registrar evaluaciones.
+  if (role && !["ADMIN", "EVALUADOR", "INVESTIGADOR"].includes(role)) {
+    return <AccessRestricted required={["ADMIN", "EVALUADOR", "INVESTIGADOR"]} />;
+  }
+
+  return <NuevaEvaluacionInner />;
+}
+
+function NuevaEvaluacionInner() {
   const { selectedParticipantId, selectParticipant, setSection } = useAppStore();
   const [step, setStep] = useState(0);
   const [participantId, setParticipantId] = useState<string>(selectedParticipantId || "");
@@ -129,22 +143,17 @@ export function NuevaEvaluacionSection() {
   const [preview, setPreview] = useState<any>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
 
-  const { data: participants } = useQuery<Participant[]>({
-    queryKey: ["participants"],
-    queryFn: async () => (await fetch("/api/participants")).json(),
-  });
-  const { data: devices } = useQuery<Device[]>({
-    queryKey: ["devices"],
-    queryFn: async () => (await fetch("/api/devices")).json(),
-  });
-  const { data: equations } = useQuery<Equation[]>({
-    queryKey: ["equations"],
-    queryFn: async () => (await fetch("/api/equations")).json(),
-  });
+  const { data: participants } = useApiQuery<Participant[]>("/api/participants");
+  const { data: devices } = useApiQuery<Device[]>("/api/devices");
+  const { data: equations } = useApiQuery<Equation[]>("/api/equations");
+
+  const participantsArr = Array.isArray(participants) ? participants : [];
+  const devicesArr = Array.isArray(devices) ? devices : [];
+  const equationsArr = Array.isArray(equations) ? equations : [];
 
   const participant = useMemo(
-    () => participants?.find((p) => p.id === participantId) || null,
-    [participants, participantId]
+    () => participantsArr.find((p) => p.id === participantId) || null,
+    [participantsArr, participantId]
   );
 
   useEffect(() => {
@@ -351,7 +360,7 @@ export function NuevaEvaluacionSection() {
             <Select value={participantId} onValueChange={setParticipantId}>
               <SelectTrigger><SelectValue placeholder="Seleccione un participante" /></SelectTrigger>
               <SelectContent>
-                {(participants || []).map((p) => (
+                {participantsArr.map((p) => (
                   <SelectItem key={p.id} value={p.id}>
                     {p.fullName} ({p.internalId}) — {p.sex === "MASCULINO" ? "M" : "F"} — {p.heightCm} cm
                   </SelectItem>
@@ -385,7 +394,7 @@ export function NuevaEvaluacionSection() {
               <Select value={deviceId} onValueChange={setDeviceId}>
                 <SelectTrigger><SelectValue placeholder="Seleccione un dispositivo" /></SelectTrigger>
                 <SelectContent>
-                  {(devices || []).map((d) => (
+                  {devicesArr.map((d) => (
                     <SelectItem key={d.id} value={d.id}>
                       {d.manufacturer} {d.model} ({d.biaType})
                     </SelectItem>
@@ -542,7 +551,7 @@ export function NuevaEvaluacionSection() {
               <Select value={equationId} onValueChange={setEquationId}>
                 <SelectTrigger><SelectValue placeholder="Seleccione una ecuación" /></SelectTrigger>
                 <SelectContent>
-                  {(equations || []).map((e) => (
+                  {equationsArr.map((e) => (
                     <SelectItem key={e.id} value={e.id}>
                       {e.name} ({e.year})
                     </SelectItem>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useApiQuery } from "@/hooks/use-api-query";
 import {
   Card,
   CardContent,
@@ -47,13 +47,11 @@ export function InvestigacionSection() {
   const [to, setTo] = useState("");
   const [equationId, setEquationId] = useState("ALL");
   const [population, setPopulation] = useState("ALL");
-  const [preview, setPreview] = useState<any[] | null>(null);
+  const [preview, setPreview] = useState<{ headers: string[]; rows: string[][]; total: number } | null>(null);
   const [downloading, setDownloading] = useState(false);
 
-  const { data: equations } = useQuery<Equation[]>({
-    queryKey: ["equations"],
-    queryFn: async () => (await fetch("/api/equations")).json(),
-  });
+  const { data: equations } = useApiQuery<Equation[]>("/api/equations");
+  const equationsArr = Array.isArray(equations) ? equations : [];
 
   function buildUrl() {
     const params = new URLSearchParams();
@@ -178,7 +176,7 @@ export function InvestigacionSection() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ALL">Todas</SelectItem>
-                  {(equations || []).map((e) => (
+                  {equationsArr.map((e) => (
                     <SelectItem key={e.id} value={e.id}>{e.name} ({e.year})</SelectItem>
                   ))}
                 </SelectContent>

@@ -112,8 +112,13 @@ function UsersTab() {
 
   const { data, isLoading } = useQuery<User[]>({
     queryKey: ["users"],
-    queryFn: async () => (await fetch("/api/users")).json(),
+    queryFn: async () => {
+      const r = await fetch("/api/users");
+      if (!r.ok) throw new Error("Error al cargar usuarios");
+      return r.json();
+    },
   });
+  const dataArr = Array.isArray(data) ? data : [];
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -252,8 +257,8 @@ function UsersTab() {
                 <TableRow>
                   <TableCell colSpan={6} className="text-muted-foreground text-sm">Cargando...</TableCell>
                 </TableRow>
-              ) : data && data.length > 0 ? (
-                data.map((u) => (
+              ) : dataArr.length > 0 ? (
+                dataArr.map((u) => (
                   <TableRow key={u.id}>
                     <TableCell className="font-medium">{u.name}</TableCell>
                     <TableCell className="text-sm">{u.email}</TableCell>
@@ -288,8 +293,13 @@ function UsersTab() {
 function AuditTab() {
   const { data, isLoading } = useQuery<AuditLog[]>({
     queryKey: ["audit"],
-    queryFn: async () => (await fetch("/api/audit")).json(),
+    queryFn: async () => {
+      const r = await fetch("/api/audit");
+      if (!r.ok) throw new Error("Error al cargar auditoría");
+      return r.json();
+    },
   });
+  const dataArr = Array.isArray(data) ? data : [];
   return (
     <Card>
       <CardHeader>
@@ -312,8 +322,8 @@ function AuditTab() {
                 <TableRow>
                   <TableCell colSpan={4} className="text-muted-foreground text-sm">Cargando...</TableCell>
                 </TableRow>
-              ) : data && data.length > 0 ? (
-                data.map((l) => (
+              ) : dataArr.length > 0 ? (
+                dataArr.map((l) => (
                   <TableRow key={l.id}>
                     <TableCell className="text-sm">{fmtDate(l.createdAt)}</TableCell>
                     <TableCell className="text-sm">

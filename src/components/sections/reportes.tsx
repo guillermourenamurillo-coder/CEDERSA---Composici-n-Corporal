@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -21,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { FileText, Download, Loader2, ExternalLink, FileDown } from "lucide-react";
+import { AccessRestricted } from "@/components/access-restricted";
 import { fmt, fmtDate, QualityBadge } from "./_shared";
 
 interface Measurement {
@@ -35,12 +37,29 @@ interface Measurement {
 }
 
 export function ReportesSection() {
+  const { data: session } = useSession();
+  const role = (session?.user as any)?.role as string | undefined;
+
+  // Reportes disponible para ADMIN, EVALUADOR, INVESTIGADOR.
+  if (role && !["ADMIN", "EVALUADOR", "INVESTIGADOR"].includes(role)) {
+    return <AccessRestricted required={["ADMIN", "EVALUADOR", "INVESTIGADOR"]} />;
+  }
+
+  return <ReportesInner />;
+}
+
+function ReportesInner() {
   const [generatingId, setGeneratingId] = useState<string | null>(null);
 
   const { data, isLoading, refetch } = useQuery<Measurement[]>({
     queryKey: ["measurements-recent"],
-    queryFn: async () => (await fetch("/api/measurements")).json(),
+    queryFn: async () => {
+      const r = await fetch("/api/measurements");
+      if (!r.ok) throw new Error("Error al cargar mediciones");
+      return r.json();
+    },
   });
+  const dataArr = Array.isArray(data) ? data : [];
 
   async function generatePdf(m: Measurement) {
     setGeneratingId(m.id);
@@ -50,10 +69,13 @@ export function ReportesSection() {
         const err = await r.json().catch(() => ({}));
         throw new Error(err.error || "Error al generar PDF");
       }
-      const data = await r.json();
+      // El endpoint devuelve el PDF directamente como binario.
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      // Limpiar la URL del objeto después de 60s (tiempo suficiente para que abra).
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
       toast.success("Reporte PDF generado");
-      // abrir en nueva pestaña
-      window.open(data.url, "_blank");
       refetch();
     } catch (e: any) {
       toast.error(e.message);
@@ -101,8 +123,8 @@ export function ReportesSection() {
                   <TableRow>
                     <TableCell colSpan={7} className="text-muted-foreground text-sm">Cargando...</TableCell>
                   </TableRow>
-                ) : data && data.length > 0 ? (
-                  data.map((m) => (
+                ) : dataArr.length > 0 ? (
+                  dataArr.map((m) => (
                     <TableRow key={m.id}>
                       <TableCell className="font-medium">
                         {m.participant.fullName}

@@ -1,12 +1,23 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getAppSession, forbiddenResponse, unauthorizedResponse, notFoundResponse, logAction } from "@/lib/permissions";
+import {
+  getAppSession,
+  forbiddenResponse,
+  unauthorizedResponse,
+  notFoundResponse,
+  logAction,
+} from "@/lib/permissions";
 import { generateMeasurementPdf } from "@/lib/pdf/generator";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 
 // POST /api/reports/[measurementId]/generate-pdf — genera el reporte PDF.
-export async function POST(_req: NextRequest, { params }: { params: Promise<{ measurementId: string }> }) {
+//
+// En Vercel serverless el filesystem es efímero y read-only salvo /tmp.
+// Por eso devolvemos el PDF directamente como respuesta (streaming binary),
+// sin escribirlo a disco. El navegador lo descarga o abre en nueva pestaña.
+export async function POST(
+  _req: NextRequest,
+  { params }: { params: Promise<{ measurementId: string }> }
+) {
   const user = await getAppSession();
   if (!user) return unauthorizedResponse();
   if (user.role === "USUARIO") return forbiddenResponse();
@@ -25,20 +36,30 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ me
   if (!measurement) return notFoundResponse();
 
   const pdfBuffer = generateMeasurementPdf(measurement as any);
-  const dir = path.join(process.cwd(), "public", "reports");
-  await mkdir(dir, { recursive: true });
-  const filename = `reporte_${measurement.id}.pdf`;
-  await writeFile(path.join(dir, filename), pdfBuffer);
 
-  const report = await db.report.create({
+  // Registrar en BD (sin pdfPath persistente; el PDF se sirve on-demand).
+  await db.report.create({
     data: {
       measurementId,
       generatedBy: user.id,
-      pdfPath: `/reports/${filename}`,
+      pdfPath: null,
       includesCharts: true,
       includesComparison: true,
     },
   });
-  await logAction(user.id, "EXPORT", `Reporte PDF generado para medición ${measurementId}`);
-  return Response.json({ ok: true, report, url: `/reports/${filename}` });
+  await logAction(
+    user.id,
+    "EXPORT",
+    `Reporte PDF generado para medición ${measurementId}`
+  );
+
+  // Devolver el PDF como respuesta binaria directa.
+  return new NextResponse(pdfBuffer as unknown as BodyInit, {
+    status: 200,
+    headers: {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `inline; filename="reporte_${measurementId}.pdf"`,
+      "Content-Length": String(pdfBuffer.length),
+    },
+  });
 }

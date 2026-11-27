@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -53,14 +53,14 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "participantes", label: "Participantes", icon: Users },
-  { id: "nueva-evaluacion", label: "Nueva Evaluación", icon: ClipboardPlus },
-  { id: "evolucion", label: "Evolución", icon: TrendingUp },
-  { id: "ecuaciones", label: "Ecuaciones BIA", icon: Calculator },
-  { id: "dispositivos", label: "Dispositivos", icon: Cpu },
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["ADMIN", "EVALUADOR", "INVESTIGADOR"] },
+  { id: "participantes", label: "Participantes", icon: Users, roles: ["ADMIN", "EVALUADOR", "INVESTIGADOR"] },
+  { id: "nueva-evaluacion", label: "Nueva Evaluación", icon: ClipboardPlus, roles: ["ADMIN", "EVALUADOR", "INVESTIGADOR"] },
+  { id: "evolucion", label: "Evolución", icon: TrendingUp, roles: ["ADMIN", "EVALUADOR", "INVESTIGADOR"] },
+  { id: "ecuaciones", label: "Ecuaciones BIA", icon: Calculator, roles: ["ADMIN", "EVALUADOR", "INVESTIGADOR", "USUARIO"] },
+  { id: "dispositivos", label: "Dispositivos", icon: Cpu, roles: ["ADMIN", "EVALUADOR", "INVESTIGADOR", "USUARIO"] },
   { id: "investigacion", label: "Investigación", icon: FlaskConical, roles: ["ADMIN", "INVESTIGADOR"] },
-  { id: "reportes", label: "Reportes", icon: FileText },
+  { id: "reportes", label: "Reportes", icon: FileText, roles: ["ADMIN", "EVALUADOR", "INVESTIGADOR"] },
   { id: "ajustes", label: "Ajustes / Usuarios", icon: Settings, roles: ["ADMIN"] },
 ];
 
@@ -87,6 +87,15 @@ export function AppShell() {
 
   const role = (session?.user as any)?.role as string | undefined;
   const navItems = NAV_ITEMS.filter((item) => !item.roles || (role && item.roles.includes(role)));
+
+  // Si la sección actual no está disponible para el rol, redirigir a la primera disponible.
+  useEffect(() => {
+    if (!role) return;
+    const availableSections = navItems.map((n) => n.id);
+    if (availableSections.length > 0 && !availableSections.includes(currentSection)) {
+      setSection(availableSections[0]);
+    }
+  }, [role, currentSection, navItems, setSection]);
 
   function go(s: Section) {
     setSection(s);

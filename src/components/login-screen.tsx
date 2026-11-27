@@ -313,21 +313,6 @@ export function LoginScreen() {
             </form>
           )}
         </Card>
-
-        {/* Credenciales de demostración */}
-        <div className="mt-6 text-center text-xs text-muted-foreground">
-          <details className="inline-block text-left">
-            <summary className="cursor-pointer hover:text-foreground transition-colors">
-              Credenciales de demostración
-            </summary>
-            <div className="mt-2 p-3 rounded-md bg-muted/60 text-[11px] space-y-1">
-              <div><strong>ADMIN</strong>: admin@cedersa.ac.cr / Admin123!</div>
-              <div><strong>EVALUADOR</strong>: evaluador@cedersa.ac.cr / Eval123!</div>
-              <div><strong>INVESTIGADOR</strong>: investigador@cedersa.ac.cr / Inv123!</div>
-              <div><strong>USUARIO</strong>: usuario@cedersa.ac.cr / User123!</div>
-            </div>
-          </details>
-        </div>
       </div>
     </div>
   );

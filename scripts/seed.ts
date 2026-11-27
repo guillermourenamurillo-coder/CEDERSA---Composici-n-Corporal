@@ -310,7 +310,7 @@ async function seedUsers() {
       update: { name: u.name, role: u.role, passwordHash, active: true },
       create: { email: u.email, name: u.name, role: u.role, passwordHash, active: true },
     });
-    console.log(`  usuario: ${result.email} (${result.role}) — ${u.pass}`);
+    console.log(`  usuario: ${result.email} (${result.role})`);
   }
 }
 

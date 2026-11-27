@@ -1,13 +1,13 @@
 // Prisma schema — CEDERSA | Composición Corporal
-// Diseñado de forma portable (SQLite en sandbox; migrable a PostgreSQL
-// cambiando únicamente el bloque `datasource`).
+// Base de datos: PostgreSQL (producción en Vercel + Neon/Supabase/etc.).
+// La URL se lee de la variable de entorno DATABASE_URL.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -63,7 +63,7 @@ model Device {
   id              String   @id @default(cuid())
   manufacturer    String   // p. ej. InBody
   model           String   // p. ej. InBody 770
-  serialNumber    String?
+  serialNumber    String?  @unique
   biaType         String   // SFBIA, MFBIA, BIS
   electrodesCount Int?
   frequenciesKHz  String?  // separados por coma: "1,5,50,250,500"
@@ -77,7 +77,7 @@ model Device {
 // === BIBLIOTECA DE ECUACIONES ===
 model Equation {
   id                String   @id @default(cuid())
-  name              String
+  name              String   @unique
   authors           String
   year              Int
   reference         String

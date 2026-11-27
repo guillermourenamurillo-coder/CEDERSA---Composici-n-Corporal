@@ -22,7 +22,7 @@ La aplicación diferencia claramente tres tipos de variables:
 
 - **Framework:** Next.js 16 (App Router) + TypeScript 5
 - **Estilos:** Tailwind CSS 4 + shadcn/ui
-- **Base de datos:** Prisma ORM (SQLite en desarrollo, portable a PostgreSQL)
+- **Base de datos:** PostgreSQL con Prisma ORM (compatible con Neon, Supabase, Vercel Postgres y cualquier proveedor PostgreSQL)
 - **Gráficos:** Recharts
 - **Autenticación:** NextAuth.js v4 con roles
 - **PDF:** jsPDF + autotable
@@ -57,17 +57,32 @@ bun install
 
 # 2. Configurar variables de entorno
 cp .env.example .env
-# Editar .env con tu DATABASE_URL y NEXTAUTH_SECRET
+# Editar .env con tu DATABASE_URL de PostgreSQL y NEXTAUTH_SECRET
+# Ejemplo: postgresql://user:pass@host:5432/cedersa?sslmode=require
 
-# 3. Crear la base de datos
+# 3. Crear el esquema de la base de datos
 bun run db:push
 
-# 4. Sembrar usuarios y ecuaciones
+# 4. Sembrar usuarios y ecuaciones (idempotente, seguro de reejecutar)
 bun run scripts/seed.ts
 
 # 5. Iniciar el servidor de desarrollo
 bun run dev
 ```
+
+## Deployment en Vercel
+
+1. Importa el repositorio en https://vercel.com/new
+2. Vercel detecta automáticamente Next.js y `vercel.json`
+3. **Variables de entorno** (Settings → Environment Variables):
+   - `DATABASE_URL` → tu URL de PostgreSQL (recomendado: Neon o Supabase)
+   - `NEXTAUTH_SECRET` → genera con `openssl rand -base64 32`
+   - `NEXTAUTH_URL` → `https://tu-dominio.vercel.app`
+4. **Build Command:** `bun run build` (ejecuta `prisma db push` + seed idempotente + `next build`)
+5. **Install Command:** `bun install --frozen-lockfile` (el `postinstall` ejecuta `prisma generate` automáticamente)
+6. Deploy
+
+El seed se ejecuta automáticamente durante el build **solo si la tabla `User` está vacía**, así que el primer deploy siembra los datos demo y los siguientes no los sobrescribe.
 
 ## Credenciales sembradas (demo)
 

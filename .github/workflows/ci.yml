@@ -10,6 +10,22 @@ jobs:
   quality:
     name: Lint y build
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: cedersa_ci
+          POSTGRES_PASSWORD: cedersa_ci
+          POSTGRES_DB: cedersa_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cedersa_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,15 +38,20 @@ jobs:
       - name: Instalar dependencias
         run: bun install --frozen-lockfile
 
-      - name: Generar cliente Prisma
+      - name: Generar cliente Prisma (postinstall)
         run: bun run db:generate
 
       - name: Lint
         run: bun run lint
 
+      - name: Aplicar esquema y seed idempotente
+        run: bun run db:push && bun run scripts/seed.ts -- --if-empty
+        env:
+          DATABASE_URL: "postgresql://cedersa_ci:cedersa_ci@localhost:5432/cedersa_ci?schema=public"
+
       - name: Compilar (build)
         run: bun run build
         env:
-          DATABASE_URL: "file:./ci.db"
+          DATABASE_URL: "postgresql://cedersa_ci:cedersa_ci@localhost:5432/cedersa_ci?schema=public"
           NEXTAUTH_SECRET: "ci-secret-not-for-production"
           NEXTAUTH_URL: "http://localhost:3000"

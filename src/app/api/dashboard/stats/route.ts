@@ -25,7 +25,7 @@ export async function GET() {
     _count: true,
   });
 
-  // Rangos etarios (calculados en JS porque SQLite no tiene funciones de fecha ricas)
+  // Rangos etarios (calculados en JS para portabilidad entre motores SQL)
   const participants = await db.participant.findMany({ select: { birthDate: true } });
   const ageBuckets = { "<18": 0, "18-40": 0, "41-60": 0, "61+": 0 };
   for (const p of participants) {

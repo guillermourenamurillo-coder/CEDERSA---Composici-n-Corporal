@@ -1,55 +1,36 @@
-// Seed: usuarios (4 roles) + 8 ecuaciones BIA publicadas + dispositivo demo.
-// Ejecutar: `bun run scripts/seed.ts`
+// Seed idempotente — CEDERSA | Composición Corporal
+// ============================================================================
+// Este script NO borra datos. Usa upsert para crear o actualizar cada registro.
+// Es seguro ejecutarlo múltiples veces: si el registro ya existe, se actualiza
+// con los valores definidos aquí; si no existe, se crea.
+//
+// Uso:
+//   bun run scripts/seed.ts                 # seed completo
+//   bun run scripts/seed.ts --if-empty      # solo si la tabla User está vacía
+//
+// El flag --if-empty se usa durante el build de Vercel para sembrar la BD
+// de producción solo en el primer deploy, sin sobrescribir datos existentes.
+// ============================================================================
+
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
-async function main() {
-  console.log("Limpiando base de datos...");
-  await prisma.auditLog.deleteMany();
-  await prisma.report.deleteMany();
-  await prisma.bodyComposition.deleteMany();
-  await prisma.measurementCondition.deleteMany();
-  await prisma.measurement.deleteMany();
-  await prisma.equation.deleteMany();
-  await prisma.device.deleteMany();
-  await prisma.participant.deleteMany();
-  await prisma.user.deleteMany();
+const USERS = [
+  { email: "admin@cedersa.ac.cr", name: "Administrador CEDERSA", role: "ADMIN" as const, pass: "Admin123!" },
+  { email: "evaluador@cedersa.ac.cr", name: "Evaluador Demo", role: "EVALUADOR" as const, pass: "Eval123!" },
+  { email: "investigador@cedersa.ac.cr", name: "Investigador Demo", role: "INVESTIGADOR" as const, pass: "Inv123!" },
+  { email: "usuario@cedersa.ac.cr", name: "Usuario Demo", role: "USUARIO" as const, pass: "User123!" },
+];
 
-  console.log("Creando usuarios...");
-  const users = [
-    { email: "admin@cedersa.ac.cr", name: "Administrador CEDERSA", role: "ADMIN", pass: "Admin123!" },
-    { email: "evaluador@cedersa.ac.cr", name: "Evaluador Demo", role: "EVALUADOR", pass: "Eval123!" },
-    { email: "investigador@cedersa.ac.cr", name: "Investigador Demo", role: "INVESTIGADOR", pass: "Inv123!" },
-    { email: "usuario@cedersa.ac.cr", name: "Usuario Demo", role: "USUARIO", pass: "User123!" },
-  ] as const;
-  for (const u of users) {
-    const passwordHash = await bcrypt.hash(u.pass, 10);
-    await prisma.user.create({
-      data: { email: u.email, name: u.name, role: u.role, passwordHash, active: true },
-    });
-    console.log(`  usuario: ${u.email} / ${u.pass} (${u.role})`);
-  }
+// Clave única para identificar el dispositivo demo (no cambia entre runs).
+const DEMO_DEVICE_SERIAL = "IB770-DEMO-001";
 
-  console.log("Creando dispositivo demo...");
-  const device = await prisma.device.create({
-    data: {
-      manufacturer: "InBody",
-      model: "InBody 770",
-      serialNumber: "IB770-DEMO-001",
-      biaType: "MFBIA",
-      electrodesCount: 8,
-      frequenciesKHz: "1,5,50,250,500",
-      softwareName: "InBody",
-      softwareVersion: "Demo",
-    },
-  });
-  console.log(`  dispositivo: ${device.manufacturer} ${device.model} (${device.id})`);
-
-  console.log("Cargando ecuaciones BIA...");
-  // 1. Sun et al. (2003) — TBW adultos
-  await prisma.equation.create({
+// Claves únicas para cada ecuación (nombre + año).
+const EQUATIONS = [
+  {
+    key: "Sun et al. (2003) — TBW adultos multifrecuencia",
     data: {
       name: "Sun et al. (2003) — TBW adultos multifrecuencia",
       authors: "Sun SS, Chumlea WC, Heymsfield SB, et al.",
@@ -74,10 +55,9 @@ async function main() {
       outputVariable: "TBW",
       active: true,
     },
-  });
-
-  // 2. Kyle et al. (2001) — FFM adultos
-  await prisma.equation.create({
+  },
+  {
+    key: "Kyle et al. (2001) — FFM adultos con reactancia",
     data: {
       name: "Kyle et al. (2001) — FFM adultos con reactancia",
       authors: "Kyle UG, Genton L, Karsegard L, Slosman DO, Pichard C.",
@@ -102,10 +82,9 @@ async function main() {
       outputVariable: "FFM",
       active: true,
     },
-  });
-
-  // 3. Kushner & Schoeller (1986) — TBW clásico (hombres)
-  await prisma.equation.create({
+  },
+  {
+    key: "Kushner & Schoeller (1986) — TBW hombres",
     data: {
       name: "Kushner & Schoeller (1986) — TBW hombres",
       authors: "Kushner RF, Schoeller DA.",
@@ -130,10 +109,9 @@ async function main() {
       outputVariable: "TBW",
       active: true,
     },
-  });
-
-  // 3b. Kushner & Schoeller (1986) — TBW mujeres
-  await prisma.equation.create({
+  },
+  {
+    key: "Kushner & Schoeller (1986) — TBW mujeres",
     data: {
       name: "Kushner & Schoeller (1986) — TBW mujeres",
       authors: "Kushner RF, Schoeller DA.",
@@ -158,10 +136,9 @@ async function main() {
       outputVariable: "TBW",
       active: true,
     },
-  });
-
-  // 4. Deurenberg et al. (1991) — FFM
-  await prisma.equation.create({
+  },
+  {
+    key: "Deurenberg et al. (1991) — FFM adultos",
     data: {
       name: "Deurenberg et al. (1991) — FFM adultos",
       authors: "Deurenberg P, Weststrate JA, van der Kooy K.",
@@ -186,10 +163,9 @@ async function main() {
       outputVariable: "FFM",
       active: true,
     },
-  });
-
-  // 5. Roubenoff et al. (1995) — TBW adultos mayores
-  await prisma.equation.create({
+  },
+  {
+    key: "Roubenoff et al. (1995) — TBW adultos mayores",
     data: {
       name: "Roubenoff et al. (1995) — TBW adultos mayores",
       authors: "Roubenoff R, Baumgartner RN, Harris TB, et al.",
@@ -214,10 +190,9 @@ async function main() {
       outputVariable: "TBW",
       active: true,
     },
-  });
-
-  // 6. Segal et al. (1985) — FFM (combinado, simplificado)
-  await prisma.equation.create({
+  },
+  {
+    key: "Segal et al. (1985) — FFM (versión combinada)",
     data: {
       name: "Segal et al. (1985) — FFM (versión combinada)",
       authors: "Segal KR, Gutin B, Presta E, Wang J, Van Itallie TB.",
@@ -242,10 +217,9 @@ async function main() {
       outputVariable: "FFM",
       active: true,
     },
-  });
-
-  // 7. Lukaski & Bolonchuk (1987) — FFM hombres atletas
-  await prisma.equation.create({
+  },
+  {
+    key: "Lukaski & Bolonchuk (1987) — FFM hombres atletas",
     data: {
       name: "Lukaski & Bolonchuk (1987) — FFM hombres atletas",
       authors: "Lukaski HC, Bolonchuk WW.",
@@ -270,10 +244,9 @@ async function main() {
       outputVariable: "FFM",
       active: true,
     },
-  });
-
-  // 8. Heitmann (1990) — FFM adultos daneses
-  await prisma.equation.create({
+  },
+  {
+    key: "Heitmann (1990) — FFM adultos daneses",
     data: {
       name: "Heitmann (1990) — FFM adultos daneses",
       authors: "Heitmann BL.",
@@ -298,10 +271,9 @@ async function main() {
       outputVariable: "FFM",
       active: true,
     },
-  });
-
-  // Ecuación experimental adicional (marcada como PROVISIONAL)
-  await prisma.equation.create({
+  },
+  {
+    key: "Ecuación provisional CEDERSA — FFMI estimado",
     data: {
       name: "Ecuación provisional CEDERSA — FFMI estimado",
       authors: "CEDERSA (interna)",
@@ -326,18 +298,87 @@ async function main() {
       outputVariable: "FFM",
       active: true,
     },
-  });
+  },
+];
 
-  console.log("Seed completado.");
-  console.log("Usuarios:");
-  for (const u of users) console.log(`  ${u.email} / ${u.pass} (${u.role})`);
-  console.log("Dispositivo demo:", device.id);
-  console.log("Ecuaciones: 9 cargadas (8 validadas + 1 provisional).");
+async function seedUsers() {
+  console.log("Asegurando usuarios demo (upsert)...");
+  for (const u of USERS) {
+    const passwordHash = await bcrypt.hash(u.pass, 10);
+    const result = await prisma.user.upsert({
+      where: { email: u.email },
+      update: { name: u.name, role: u.role, passwordHash, active: true },
+      create: { email: u.email, name: u.name, role: u.role, passwordHash, active: true },
+    });
+    console.log(`  usuario: ${result.email} (${result.role}) — ${u.pass}`);
+  }
+}
+
+async function seedDevice() {
+  console.log("Asegurando dispositivo demo (upsert)...");
+  const device = await prisma.device.upsert({
+    where: { serialNumber: DEMO_DEVICE_SERIAL },
+    update: {
+      manufacturer: "InBody",
+      model: "InBody 770",
+      biaType: "MFBIA",
+      electrodesCount: 8,
+      frequenciesKHz: "1,5,50,250,500",
+      softwareName: "InBody",
+      softwareVersion: "Demo",
+    },
+    create: {
+      manufacturer: "InBody",
+      model: "InBody 770",
+      serialNumber: DEMO_DEVICE_SERIAL,
+      biaType: "MFBIA",
+      electrodesCount: 8,
+      frequenciesKHz: "1,5,50,250,500",
+      softwareName: "InBody",
+      softwareVersion: "Demo",
+    },
+  });
+  console.log(`  dispositivo: ${device.manufacturer} ${device.model} (serial ${device.serialNumber})`);
+  return device;
+}
+
+async function seedEquations() {
+  console.log("Asegurando ecuaciones BIA (upsert)...");
+  for (const eq of EQUATIONS) {
+    await prisma.equation.upsert({
+      where: { name: eq.key },
+      update: eq.data,
+      create: eq.data,
+    });
+  }
+  const total = await prisma.equation.count();
+  console.log(`  ecuaciones: ${total} en total (${EQUATIONS.length} esperadas)`);
+}
+
+async function main() {
+  const ifEmpty = process.argv.includes("--if-empty");
+
+  if (ifEmpty) {
+    const userCount = await prisma.user.count();
+    if (userCount > 0) {
+      console.log(`Seed omitido: la tabla User ya tiene ${userCount} registros.`);
+      return;
+    }
+    console.log("Tabla User vacía — ejecutando seed inicial...");
+  } else {
+    console.log("Seed completo (idempotente, upsert)...");
+  }
+
+  await seedUsers();
+  await seedDevice();
+  await seedEquations();
+
+  console.log("Seed completado correctamente.");
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error("Error en seed:", e);
     process.exit(1);
   })
   .finally(async () => {
